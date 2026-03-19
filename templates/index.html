@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pharmacy Chatbot</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .chat-container {
+            width: 400px;
+            margin: auto;
+            margin-top: 30px;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0px 0px 10px #ccc;
+        }
+
+        #chatbox {
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .user {
+            text-align: right;
+            color: white;
+            background: #25D366;
+            padding: 8px;
+            border-radius: 10px;
+            margin: 5px;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        .bot {
+            text-align: left;
+            color: black;
+            background: #e4e6eb;
+            padding: 8px;
+            border-radius: 10px;
+            margin: 5px;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        input {
+            width: 75%;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background: #25D366;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-container">
+    <h3 style="text-align:center;">💊 Pharmacy Chatbot</h3>
+
+    <div id="chatbox"></div>
+
+    <input type="text" id="userInput" placeholder="Type drug name...">
+    <button onclick="sendMessage()">Send</button>
+<button onclick="startVoice()">🎤 Speak</button>
+</div>
+<script>
+function speak(text) {
+    let speech = new SpeechSynthesisUtterance();
+    speech.text = text;
+    speech.lang = "en-US";
+    speech.rate = 1;
+    window.speechSynthesis.speak(speech);
+}
+
+function sendMessage() {
+    let message = document.getElementById("userInput").value;
+
+    if (message === "") return;
+
+    let chatbox = document.getElementById("chatbox");
+
+    chatbox.innerHTML += "<div class='user'>" + message + "</div><br>";
+
+    fetch("/get", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        let reply = data.response;
+
+        chatbox.innerHTML += "<div class='bot'>" + reply + "</div><br>";
+
+        // 🔊 Speak bot response
+        speak(reply);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+    });
+
+    document.getElementById("userInput").value = "";
+}
+
+// 🎤 Voice input (speech to text)
+function startVoice() {
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+
+    recognition.onresult = function(event) {
+        document.getElementById("userInput").value = event.results[0][0].transcript;
+        sendMessage();
+    };
+
+    recognition.start();
+}
+</script>
+</script>
+
+</body>
+</html>
