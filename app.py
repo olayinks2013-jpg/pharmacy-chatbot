@@ -36,6 +36,35 @@ DRUG_DB = {
 def analyze_prescription(text):
     text = text.lower()
     response = []
+    found_drugs = []
+
+    # Detect drugs
+    for drug, info in DRUG_DB.items():
+        if drug in text:
+            found_drugs.append(drug)
+            response.append(f"""
+Drug: {drug.title()}
+Class: {info['class']}
+CKD Alert: {info['ckd_warning']}
+Interactions: {info['interaction']}
+""")
+
+    # Check interactions
+    if len(found_drugs) >= 2:
+        for (d1, d2), info in INTERACTIONS.items():
+            if d1 in found_drugs and d2 in found_drugs:
+                response.append(f"""
+⚠️ INTERACTION DETECTED
+Drugs: {d1.title()} + {d2.title()}
+Severity: {info['severity']}
+Risk: {info['message']}
+Advice: {info['advice']}
+""")
+
+    if not response:
+        return "No known drug found. Try: metformin, ibuprofen, lisinopril"
+
+    return "\n".join(response)
 
     for drug, info in DRUG_DB.items():
         if drug in text:
