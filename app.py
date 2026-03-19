@@ -47,9 +47,13 @@ def home():
 
 @app.route("/get", methods=["POST"])
 def get_response():
-    user_input = request.form["msg"]
+    data = request.get_json()
+
+    user_input = data.get("message", "")
+
     reply = analyze_prescription(user_input)
-    return reply
+
+    return {"response": reply}
 
 
 if __name__ == "__main__":
