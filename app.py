@@ -9,6 +9,18 @@ DRUG_DB = {
         "ckd_warning": "Avoid if eGFR < 30 (risk of lactic acidosis)",
         "interaction": "Avoid with contrast media and severe renal impairment"
     },
+    INTERACTIONS = {
+    ("ibuprofen", "lisinopril"): {
+        "severity": "High",
+        "message": "Increased risk of acute kidney injury (AKI)",
+        "advice": "Avoid combination or monitor renal function closely"
+    },
+    ("ibuprofen", "metformin"): {
+        "severity": "Moderate",
+        "message": "Risk of reduced kidney function affecting metformin clearance",
+        "advice": "Use cautiously in CKD patients"
+    }
+}
     "ibuprofen": {
         "class": "NSAID",
         "ckd_warning": "Avoid in CKD patients (reduces renal blood flow)",
