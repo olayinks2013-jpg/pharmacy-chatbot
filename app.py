@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-
+import datetime
 app = Flask(__name__)
 
 DRUG_DB = {
@@ -37,7 +37,10 @@ def analyze_prescription(text):
     text = text.lower()
     response = []
     found = []
-
+def log_interaction(user_input, response):
+    with open("log.txt", "a") as file:
+        time = datetime.datetime.now()
+        file.write(f"{time} | Input: {user_input} | Response: {response}\n")
     for drug in DRUG_DB:
         if drug in text:
             found.append(drug)
@@ -61,7 +64,9 @@ def home():
 def get_response():
     data = request.get_json()
     user_input = data.get("message", "")
-    return {"response": analyze_prescription(user_input)}
+    reply = analyze_prescription(user_input)
+log_interaction(user_input, reply)
+return {"response": reply}
 
 if __name__ == "__main__":
     app.run(debug=True)
