@@ -37,6 +37,24 @@ def analyze_prescription(text):
     text = text.lower()
     response = []
     found = []
+
+    # Detect drugs
+    for drug in DRUG_DB:
+        if drug in text:
+            found.append(drug)
+            info = DRUG_DB[drug]
+            response.append(f"{drug.title()} - {info['ckd_warning']}")
+
+    # Detect interactions
+    if len(found) >= 2:
+        for (d1, d2), info in INTERACTIONS.items():
+            if set([d1, d2]).issubset(set(found)):
+                response.append(f"⚠️ {d1} + {d2}: {info['message']} ({info['severity']})")
+
+    if not response:
+        return "No drug found"
+
+    return "\n".join(response)
 def log_interaction(user_input, response):
     with open("log.txt", "a") as file:
         time = datetime.datetime.now()
