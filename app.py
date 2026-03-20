@@ -2,122 +2,66 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# Simple clinical drug knowledge base (starter version)
 DRUG_DB = {
     "metformin": {
         "class": "Antidiabetic (Biguanide)",
-        "ckd_warning": "Avoid if eGFR < 30 (risk of lactic acidosis)",
-        "interaction": "Avoid with contrast media and severe renal impairment"
+        "ckd_warning": "Avoid if eGFR < 30",
+        "interaction": "Avoid in severe renal impairment"
     },
-    INTERACTIONS = {
-    ("ibuprofen", "lisinopril"): {
-        "severity": "High",
-        "message": "Increased risk of acute kidney injury (AKI)",
-        "advice": "Avoid combination or monitor renal function closely"
-    },
-    ("ibuprofen", "metformin"): {
-        "severity": "Moderate",
-        "message": "Risk of reduced kidney function affecting metformin clearance",
-        "advice": "Use cautiously in CKD patients"
-    }
-} = {
-    ("ibuprofen", "lisinopril"): {
-        "severity": "High",
-        "message": "Increased risk of acute kidney injury (AKI)",
-        "advice": "Avoid combination or monitor renal function closely"
-    },
-    ("ibuprofen", "metformin"): {
-        "severity": "Moderate",
-        "message": "Risk of reduced kidney function affecting metformin clearance",
-        "advice": "Use cautiously in CKD patients"
-    }
-} = {
-    ("ibuprofen", "lisinopril"): {
-        "severity": "High",
-        "message": "Increased risk of acute kidney injury (AKI)",
-        "advice": "Avoid combination or monitor renal function closely"
-    },
-    ("ibuprofen", "metformin"): {
-        "severity": "Moderate",
-        "message": "Risk of reduced kidney function affecting metformin clearance",
-        "advice": "Use cautiously in CKD patients"
-    }
-}
     "ibuprofen": {
         "class": "NSAID",
-        "ckd_warning": "Avoid in CKD patients (reduces renal blood flow)",
-        "interaction": "Increases risk of AKI when combined with ACE inhibitors/diuretics"
+        "ckd_warning": "Avoid in CKD patients",
+        "interaction": "Risk of kidney injury with ACE inhibitors"
     },
     "lisinopril": {
         "class": "ACE inhibitor",
-        "ckd_warning": "Use cautiously in CKD; monitor creatinine & potassium",
-        "interaction": "Risk of hyperkalemia with potassium supplements"
+        "ckd_warning": "Monitor kidney function",
+        "interaction": "Risk of high potassium"
+    }
+}
+
+INTERACTIONS = {
+    ("ibuprofen", "lisinopril"): {
+        "severity": "High",
+        "message": "Risk of kidney injury",
+        "advice": "Avoid or monitor closely"
+    },
+    ("ibuprofen", "metformin"): {
+        "severity": "Moderate",
+        "message": "Reduced kidney function risk",
+        "advice": "Use cautiously"
     }
 }
 
 def analyze_prescription(text):
     text = text.lower()
     response = []
-    found_drugs = []
+    found = []
 
-    # Detect drugs
-    for drug, info in DRUG_DB.items():
+    for drug in DRUG_DB:
         if drug in text:
-            found_drugs.append(drug)
-            response.append(f"""
-Drug: {drug.title()}
-Class: {info['class']}
-CKD Alert: {info['ckd_warning']}
-Interactions: {info['interaction']}
-""")
+            found.append(drug)
+            info = DRUG_DB[drug]
+            response.append(f"{drug.title()} - {info['ckd_warning']}")
 
-    # Check interactions
-    if len(found_drugs) >= 2:
-        for (d1, d2), info in INTERACTIONS.items():
-            if d1 in found_drugs and d2 in found_drugs:
-                response.append(f"""
-⚠️ INTERACTION DETECTED
-Drugs: {d1.title()} + {d2.title()}
-Severity: {info['severity']}
-Risk: {info['message']}
-Advice: {info['advice']}
-""")
+    for (d1, d2), info in INTERACTIONS.items():
+        if d1 in found and d2 in found:
+            response.append(f"⚠️ {d1} + {d2}: {info['message']} ({info['severity']})")
 
     if not response:
-        return "No known drug found. Try: metformin, ibuprofen, lisinopril"
+        return "No drug found"
 
     return "\n".join(response)
-
-    for drug, info in DRUG_DB.items():
-        if drug in text:
-            response.append(f"""
-Drug: {drug.title()}
-Class: {info['class']}
-CKD Alert: {info['ckd_warning']}
-Interactions: {info['interaction']}
-""")
-
-    if not response:
-        return "No known drug found. Try: metformin, ibuprofen, lisinopril"
-
-    return "\n".join(response)
-
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-
 @app.route("/get", methods=["POST"])
 def get_response():
     data = request.get_json()
-
     user_input = data.get("message", "")
-
-    reply = analyze_prescription(user_input)
-
-    return {"response": reply}
-
+    return {"response": analyze_prescription(user_input)}
 
 if __name__ == "__main__":
     app.run(debug=True)
