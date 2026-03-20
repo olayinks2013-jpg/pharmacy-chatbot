@@ -1,17 +1,17 @@
 from flask import Flask, render_template, request
-import datetime
+
 app = Flask(__name__)
 
 DRUG_DB = {
     "metformin": {
-        "class": "Antidiabetic (Biguanide)",
+        "class": "Antidiabetic",
         "ckd_warning": "Avoid if eGFR < 30",
-        "interaction": "Avoid in severe renal impairment"
+        "interaction": "Use cautiously in kidney disease"
     },
     "ibuprofen": {
         "class": "NSAID",
         "ckd_warning": "Avoid in CKD patients",
-        "interaction": "Risk of kidney injury with ACE inhibitors"
+        "interaction": "May cause kidney damage"
     },
     "lisinopril": {
         "class": "ACE inhibitor",
@@ -24,7 +24,7 @@ INTERACTIONS = {
     ("ibuprofen", "lisinopril"): {
         "severity": "High",
         "message": "Risk of kidney injury",
-        "advice": "Avoid or monitor closely"
+        "advice": "Avoid combination"
     },
     ("ibuprofen", "metformin"): {
         "severity": "Moderate",
@@ -38,27 +38,6 @@ def analyze_prescription(text):
     response = []
     found = []
 
-    # Detect drugs
-    for drug in DRUG_DB:
-        if drug in text:
-            found.append(drug)
-            info = DRUG_DB[drug]
-            response.append(f"{drug.title()} - {info['ckd_warning']}")
-
-    # Detect interactions
-    if len(found) >= 2:
-        for (d1, d2), info in INTERACTIONS.items():
-            if set([d1, d2]).issubset(set(found)):
-                response.append(f"⚠️ {d1} + {d2}: {info['message']} ({info['severity']})")
-
-    if not response:
-        return "No drug found"
-
-    return "\n".join(response)
-def log_interaction(user_input, response):
-    with open("log.txt", "a") as file:
-        time = datetime.datetime.now()
-        file.write(f"{time} | Input: {user_input} | Response: {response}\n")
     for drug in DRUG_DB:
         if drug in text:
             found.append(drug)
@@ -72,7 +51,7 @@ def log_interaction(user_input, response):
     if not response:
         return "No drug found"
 
-    return "\n".join(response)
+    return "\\n".join(response)
 
 @app.route("/")
 def home():
@@ -82,9 +61,7 @@ def home():
 def get_response():
     data = request.get_json()
     user_input = data.get("message", "")
-    reply = analyze_prescription(user_input)
-    log_interaction(user_input, reply)
-    return {"response": reply}
+    return {"response": analyze_prescription(user_input)}
 
 if __name__ == "__main__":
     app.run(debug=True)
