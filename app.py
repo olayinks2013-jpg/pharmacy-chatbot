@@ -65,8 +65,8 @@ def get_response():
     data = request.get_json()
     user_input = data.get("message", "")
     reply = analyze_prescription(user_input)
-log_interaction(user_input, reply)
-return {"response": reply}
+    log_interaction(user_input, reply)
+    return {"response": reply}
 
 if __name__ == "__main__":
     app.run(debug=True)
